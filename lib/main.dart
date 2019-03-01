@@ -61,8 +61,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     .orderBy("createdAt", descending: true)
                     .snapshots(),
                 builder: (BuildContext context,
-                    AsyncSnapshot<QuerySnapshot> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
+                    AsyncSnapshot<QuerySnapshot> snap) {
+                  if (snap.connectionState == ConnectionState.waiting)
                     return Center(
                       child: CircularProgressIndicator(),
                     );
@@ -70,21 +70,25 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: <Widget>[
                       Expanded(
                         child: ListView.builder(
-                          itemCount: snapshot.data.documents.length,
+                          itemCount: snap.data.documents.length,
                           itemBuilder: (BuildContext context, int index) {
-                            return Text("index $index");
+                            final workout = snap.data.documents[index].data;
+                            return Text("${workout["name"]} ${workout["createdAt"]}");
                           },
                         ),
                       ),
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: TextFormField(),
+                            child: TextFormField(
+                              controller: workoutNameController,
+                            ),
                           ),
                           IconButton(
                             icon: Icon(Icons.add),
                             onPressed: () {
-                              final String workoutName = workoutNameController.text;
+                              final String workoutName =
+                                  workoutNameController.text;
                               Firestore.instance.collection("workouts").add({
                                 "name": workoutName,
                                 "uid": user.uid,
