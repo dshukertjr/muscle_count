@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "851232709170",
+    "firebase_url": "https://muscle-count.firebaseio.com",
+    "project_id": "muscle-count",
+    "storage_bucket": "muscle-count.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:851232709170:android:18147eac4ba1b8c5",
+        "android_client_info": {
+          "package_name": "com.dshukertjr.musclecount"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "851232709170-bjnamia0jp5fjehbcs843fu305gnf7u5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB9cB6KqHr0ED-rxP9eHJsmEB5J3oGhhDk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,4 @@
-package com.example.muscle_count;
+package com.dshukertjr.musclecount;
 
 import android.os.Bundle;
 import io.flutter.app.FlutterActivity;
