@@ -94,8 +94,8 @@ class _HomePageState extends State<HomePage> {
                   }
                   final Widget workoutTile = ListTile(
                     title: Text(
-                        "${workout["name"]} ×${workout["count"]}"),
-                    trailing: Text(workout["weight"] == "" ? "" : "${workout["weight"]}kg"),
+                        "${workout["name"]}"),
+                    trailing: Text(workout["weight"] == "" ? "" : "${workout["weight"]}kg ×${workout["count"]}"),
                   );
                   workoutList.add(workoutTile);
                   prevWorkout = workout;
