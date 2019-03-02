@@ -3,41 +3,47 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(App());
 
-class MyApp extends StatelessWidget {
+class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Muscle Counter',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(),
+      title: 'Macho Tracker',
+      home: HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage();
-
+class HomePage extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   FirebaseUser user;
   TextEditingController workoutNameController = TextEditingController();
   TextEditingController weightController = TextEditingController();
-  int workoutCount;
+  TextEditingController countController = TextEditingController();
   bool submitting;
-  bool _isComposing = false;
+  final dateStyle = TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+  );
 
   @override
   void initState() {
     signIn();
     super.initState();
   }
+
+  @override
+    void dispose() {
+      workoutNameController.dispose();
+      weightController.dispose();
+      countController.dispose();
+      super.dispose();
+    }
 
   void signIn() async {
     user = await FirebaseAuth.instance.currentUser();
@@ -66,29 +72,51 @@ class _MyHomePageState extends State<MyHomePage> {
                   return Center(
                     child: CircularProgressIndicator(),
                   );
-                return SafeArea(
-                  child: Column(
-                    children: <Widget>[
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: snap.data.documents.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final workout = snap.data.documents[index].data;
-                            return ListTile(
-                              title: Text(workout["name"]),
-                              subtitle: Text(" ${workout["count"] ?? ""} "),
-                              trailing: Text(
-                                workout["createdAt"] == null
-                                    ? ""
-                                    : DateFormat.yMd().format(
-                                        workout["createdAt"],
-                                      ),
-                              ),
-                            );
-                          },
-                        ),
+                List<Widget> workoutList = [];
+                Map prevWorkout;
+                snap.data.documents.forEach((snap) {
+                  final workout = snap.data;
+                  if (prevWorkout != null) {
+                    if (prevWorkout["createdAt"] != null) {
+                      if (prevWorkout["createdAt"].day !=
+                          workout["createdAt"].day) {
+                        workoutList.add(Divider());
+                        workoutList.add(Text(DateFormat.yMd().format(
+                          workout["createdAt"] ?? DateTime.now(),
+                        ),style: dateStyle,),
+                        );
+                      }
+                    }
+                  } else {
+                    workoutList.add(Text(DateFormat.yMd().format(
+                      workout["createdAt"] ?? DateTime.now(),
+                    ),style: dateStyle),);
+                  }
+                  final Widget workoutTile = ListTile(
+                    title: Text(
+                        "${workout["name"]} ${workout["count"] ?? ""}"),
+                    trailing: Text(workout["weight"] == "" ? "" : "${workout["weight"]}kg"),
+                  );
+                  workoutList.add(workoutTile);
+                  prevWorkout = workout;
+                });
+                return Column(
+                  children: <Widget>[
+                    Expanded(
+                      child: ListView(children: workoutList),
+                    ),
+                    Container(
+                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 4.0,
+                            color: Colors.black26,
+                          ),
+                        ],
                       ),
-                      Row(
+                      child: Row(
                         children: <Widget>[
                           Expanded(
                             flex: 2,
@@ -104,58 +132,47 @@ class _MyHomePageState extends State<MyHomePage> {
                               controller: weightController,
                               keyboardType: TextInputType.numberWithOptions(),
                               decoration: InputDecoration.collapsed(
-                                hintText: "Weight",
+                                hintText: "kg",
                               ),
                             ),
                           ),
-                          DropdownButton<int>(
-                            value: workoutCount,
-                            onChanged: (int val) {
-                              setState(() {
-                                workoutCount = val;
-                              });
-                            },
-                            items: List.generate(12, (i) => i + 1)
-                                .map<DropdownMenuItem<int>>((int count) {
-                              return DropdownMenuItem<int>(
-                                value: count,
-                                child: Text("$count"),
-                              );
-                            }).toList(),
+                          Expanded(
+                            child: TextField(
+                              controller: countController,
+                              keyboardType: TextInputType.numberWithOptions(),
+                              decoration: InputDecoration.collapsed(
+                                hintText: "Sets",
+                              ),
+                            ),
                           ),
                           IconButton(
                             icon: Icon(Icons.send),
-                            onPressed: _isComposing
-                                ? () async {
-                                    if (submitting == true) return;
-                                    final String workoutName =
-                                        workoutNameController.text;
-                                    if (!workoutName.isNotEmpty) return;
-                                    final double weight =
-                                        double.parse(weightController.text);
-                                    submitting = true;
-                                    setState(() {});
-                                    await Firestore.instance
-                                        .collection("workouts")
-                                        .add({
-                                      "name": workoutName,
-                                      "count": workoutCount,
-                                      "weight": weight,
-                                      "uid": user.uid,
-                                      "createdAt": FieldValue.serverTimestamp(),
-                                    });
-                                    submitting = false;
-                                    workoutCount = null;
-                                    weightController.clear();
-                                    workoutNameController.clear();
-                                    setState(() {});
-                                  }
-                                : null,
+                            onPressed: () async {
+                              if (submitting == true) return;
+                              final String workoutName =
+                                  workoutNameController.text;
+                              if (!workoutName.isNotEmpty) return;
+                              submitting = true;
+                              await Firestore.instance
+                                  .collection("workouts")
+                                  .add({
+                                "name": workoutName,
+                                "count": countController.text,
+                                "weight": weightController.text,
+                                "uid": user.uid,
+                                "createdAt": FieldValue.serverTimestamp(),
+                              });
+                              submitting = false;
+                              countController.clear();
+                              weightController.clear();
+                              workoutNameController.clear();
+                              setState(() {});
+                            },
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               },
             ),
