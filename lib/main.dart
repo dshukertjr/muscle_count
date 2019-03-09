@@ -10,6 +10,10 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        primaryColor: Color(0xFFFFF579),
+        accentColor: Color(0xFFB38664),
+      ),
       title: 'Macho Tracker',
       home: HomePage(),
     );
@@ -221,25 +225,34 @@ class Progress extends StatelessWidget {
                 return Center(
                   child: CircularProgressIndicator(),
                 );
-              final data = [
-                VolumePerDay(DateTime(2017, 9, 19), 5),
-                VolumePerDay(DateTime(2017, 9, 26), 25),
-                VolumePerDay(DateTime(2017, 10, 3), 100),
-                VolumePerDay(DateTime(2017, 10, 10), 75),
-              ];
-
+              List<VolumePerDay> data = [];
+              snaps.data.documents.forEach((snap) {
+                final workout = snap.data;
+                final volume = double.parse(workout["weight"]) *
+                    double.parse(workout["count"]);
+                if (data.length > 0) {
+                  if (workout["createdAt"].day ==
+                      data[data.length - 1].time.day) {
+                    data[data.length - 1].volume =
+                        data[data.length - 1].volume + volume;
+                  } else {
+                    data.add(VolumePerDay(workout["createdAt"], volume));
+                  }
+                } else {
+                  data.add(VolumePerDay(workout["createdAt"], volume));
+                }
+              });
               final chartdata = [
                 charts.Series<VolumePerDay, DateTime>(
-                  id: 'Sales',
-                  colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
-                  domainFn: (VolumePerDay workout, _) => workout.day,
+                  id: 'Workout',
+                  domainFn: (VolumePerDay workout, _) => workout.time,
                   measureFn: (VolumePerDay workout, _) => workout.volume,
                   data: data,
                 )
               ];
               return charts.TimeSeriesChart(
                 chartdata,
-                animate: true,
+                animate: false,
               );
             }),
       ),
@@ -248,8 +261,8 @@ class Progress extends StatelessWidget {
 }
 
 class VolumePerDay {
-  final DateTime day;
-  final int volume;
+  final DateTime time;
+  double volume;
 
-  VolumePerDay(this.day, this.volume);
+  VolumePerDay(this.time, this.volume);
 }
