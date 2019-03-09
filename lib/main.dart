@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
 
 void main() => runApp(App());
 
@@ -30,7 +31,6 @@ class _HomePageState extends State<HomePage> {
     fontSize: 18,
     fontWeight: FontWeight.bold,
   );
-
   @override
   void initState() {
     signIn();
@@ -38,12 +38,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
-    void dispose() {
-      workoutNameController.dispose();
-      weightController.dispose();
-      countController.dispose();
-      super.dispose();
-    }
+  void dispose() {
+    workoutNameController.dispose();
+    weightController.dispose();
+    countController.dispose();
+    super.dispose();
+  }
 
   void signIn() async {
     user = await FirebaseAuth.instance.currentUser();
@@ -67,35 +67,51 @@ class _HomePageState extends State<HomePage> {
                   .orderBy("createdAt", descending: true)
                   .snapshots(),
               builder:
-                  (BuildContext context, AsyncSnapshot<QuerySnapshot> snap) {
-                if (snap.connectionState == ConnectionState.waiting)
+                  (BuildContext context, AsyncSnapshot<QuerySnapshot> snaps) {
+                if (snaps.connectionState == ConnectionState.waiting)
                   return Center(
                     child: CircularProgressIndicator(),
                   );
                 List<Widget> workoutList = [];
                 Map prevWorkout;
-                snap.data.documents.forEach((snap) {
+                snaps.data.documents.forEach((DocumentSnapshot snap) {
                   final workout = snap.data;
                   if (prevWorkout != null) {
                     if (prevWorkout["createdAt"] != null) {
                       if (prevWorkout["createdAt"].day !=
                           workout["createdAt"].day) {
                         workoutList.add(Divider());
-                        workoutList.add(Text(DateFormat.yMd().format(
-                          workout["createdAt"] ?? DateTime.now(),
-                        ),style: dateStyle,),
+                        workoutList.add(
+                          Text(
+                            DateFormat.yMd().format(
+                              workout["createdAt"] ?? DateTime.now(),
+                            ),
+                            style: dateStyle,
+                          ),
                         );
                       }
                     }
                   } else {
-                    workoutList.add(Text(DateFormat.yMd().format(
-                      workout["createdAt"] ?? DateTime.now(),
-                    ),style: dateStyle),);
+                    workoutList.add(
+                      Text(
+                          DateFormat.yMd().format(
+                            workout["createdAt"] ?? DateTime.now(),
+                          ),
+                          style: dateStyle),
+                    );
                   }
                   final Widget workoutTile = ListTile(
-                    title: Text(
-                        "${workout["name"]}"),
-                    trailing: Text(workout["weight"] == "" ? "" : "${workout["weight"]}kg ×${workout["count"]}"),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                Progress(workout["name"], user.uid)),
+                      );
+                    },
+                    title: Text("${workout["name"]}"),
+                    trailing: Text(
+                        "${workout["weight"]}${workout["weight"] == "" ? "" : " kg"}×${workout["count"]}"),
                   );
                   workoutList.add(workoutTile);
                   prevWorkout = workout;
@@ -106,7 +122,8 @@ class _HomePageState extends State<HomePage> {
                       child: ListView(children: workoutList),
                     ),
                     Container(
-                      padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+                      padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).padding.bottom),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         boxShadow: [
@@ -178,4 +195,61 @@ class _HomePageState extends State<HomePage> {
             ),
     );
   }
+}
+
+class Progress extends StatelessWidget {
+  Progress(this.workoutName, this.uid);
+  final String workoutName;
+  final String uid;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(workoutName),
+      ),
+      body: SafeArea(
+        child: StreamBuilder(
+            stream: Firestore.instance
+                .collection("workouts")
+                .where("uid", isEqualTo: uid)
+                .where("name", isEqualTo: workoutName)
+                .orderBy("createdAt", descending: true)
+                .snapshots(),
+            builder:
+                (BuildContext context, AsyncSnapshot<QuerySnapshot> snaps) {
+              if (snaps.connectionState == ConnectionState.waiting)
+                return Center(
+                  child: CircularProgressIndicator(),
+                );
+              final data = [
+                VolumePerDay(DateTime(2017, 9, 19), 5),
+                VolumePerDay(DateTime(2017, 9, 26), 25),
+                VolumePerDay(DateTime(2017, 10, 3), 100),
+                VolumePerDay(DateTime(2017, 10, 10), 75),
+              ];
+
+              final chartdata = [
+                charts.Series<VolumePerDay, DateTime>(
+                  id: 'Sales',
+                  colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
+                  domainFn: (VolumePerDay workout, _) => workout.day,
+                  measureFn: (VolumePerDay workout, _) => workout.volume,
+                  data: data,
+                )
+              ];
+              return charts.TimeSeriesChart(
+                chartdata,
+                animate: true,
+              );
+            }),
+      ),
+    );
+  }
+}
+
+class VolumePerDay {
+  final DateTime day;
+  final int volume;
+
+  VolumePerDay(this.day, this.volume);
 }
