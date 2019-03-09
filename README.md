@@ -1,16 +1,14 @@
-# muscle_count
+# Workout Tracker
 
-A new Flutter project.
+Workout Tracker is an app that will keep track of your workout history. 
 
-## Getting Started
+Open the app and at the bottom of the app there are three text boxes. 
+After you complete a workout, fill out the name of the workout, and optionally fill out the weight and number of sets you completed. 
+Press the submit button and it will keep the record for the workout you completed. 
 
-This project is a starting point for a Flutter application.
+If you press on one of the workout from the list, you can view a chart of the progress you have made with that particular workout. The y-axis of the chart is volume(weight times number of sets) or just the weight or the number of sets if either one were missing. 
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
+## License
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
