@@ -228,8 +228,8 @@ class Progress extends StatelessWidget {
               List<VolumePerDay> data = [];
               snaps.data.documents.forEach((snap) {
                 final workout = snap.data;
-                final volume = double.parse(workout["weight"]) *
-                    double.parse(workout["count"]);
+                final volume = double.parse(workout["weight"]==""?"1":workout["weight"]) *
+                    double.parse(workout["count"]==""?"1":workout["count"]);
                 if (data.length > 0) {
                   if (workout["createdAt"].day ==
                       data[data.length - 1].time.day) {
